@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Affirmo">
+<title>Affirmo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1B2150">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --serif:"Cormorant Garamond","Iowan Old Style",Georgia,serif;
+  --sans:"Figtree",-apple-system,"Segoe UI",Roboto,sans-serif;
+  --text:#FFFFFF; --soft:rgba(255,255,255,.85); --shadow:0 1px 14px rgba(10,14,40,.4);
+  --panel:#141A33; --panel-ink:#EEF0F8; --panel-line:rgba(255,255,255,.14); --accent:#FFB8C9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#0B1026; color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow:hidden;
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none}
+#sky{position:fixed; inset:0; transition:background 2s linear}
+#stars{position:fixed; inset:0; pointer-events:none; transition:opacity 2s linear}
+#stars i{position:absolute; width:2px; height:2px; border-radius:50%; background:#fff}
+#rainbow{position:fixed; left:-20vw; width:140vw; aspect-ratio:2/1; pointer-events:none; opacity:0; transition:opacity 3s linear; filter:blur(1.5px)}
+canvas.fx{position:fixed; inset:0; width:100%; height:100%; pointer-events:none}
+#sun{position:fixed; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:50%;
+  transition:left 2s linear, top 2s linear, background 2s linear, box-shadow 2s linear, opacity 2s linear}
+#mountains{position:fixed; left:0; right:0; bottom:0; height:56vh; min-height:340px}
+#mountains svg{width:100%; height:100%; display:block}
+#tree{transform-box:view-box; animation:sway var(--swd,7s) ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(calc(var(--sw,1) * -.8deg))} to{transform:rotate(calc(var(--sw,1) * 1.1deg))}}
+.blades{transform-box:fill-box; transform-origin:50% 100%; animation:grass 3.8s ease-in-out infinite alternate}
+.blades.b2{animation-duration:4.6s; animation-delay:-1.3s}
+.blades.b3{animation-duration:3.2s; animation-delay:-2.1s}
+@keyframes grass{from{transform:skewX(calc(var(--sw,1) * -3deg))} to{transform:skewX(calc(var(--sw,1) * 4deg))}}
+#front{z-index:1}
+#fog{position:fixed; left:0; right:0; bottom:0; height:70vh; pointer-events:none; opacity:0; transition:opacity 3s linear;
+  background:linear-gradient(to top, rgba(225,230,238,.92) 0%, rgba(225,230,238,.75) 45%, rgba(225,230,238,0) 100%)}
+#flash{position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none}
+.meta{display:flex; align-items:baseline; gap:.6rem}
+.temp{font-size:.95rem; color:var(--soft)}
+.head-right{display:flex; align-items:center; gap:.2rem}
+.gear{padding:.35rem; margin-right:-.35rem}
+.gear svg{width:20px; height:20px}
+.opt-group{margin:0 0 2rem}
+.opt-group h3{font:600 .95rem var(--sans); margin-bottom:.75rem; color:rgba(238,240,248,.75)}
+.seg{display:flex; gap:.5rem; flex-wrap:wrap}
+.seg button{background:none; border:1px solid var(--panel-line); color:var(--panel-ink); font:500 .95rem var(--sans); padding:.6rem 1rem; border-radius:999px; cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--panel-ink); color:var(--panel); border-color:var(--panel-ink)}
+.seg button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.note{font-size:.85rem; color:rgba(238,240,248,.6); line-height:1.5; margin-top:.6rem; max-width:40ch}
+.note a{color:inherit}
+.app{position:relative; z-index:2; height:100dvh; max-width:640px; margin:0 auto;
+  display:grid; grid-template-rows:auto 1fr auto; padding:calc(env(safe-area-inset-top) + 1.25rem) 1.5rem 0}
+header{display:flex; justify-content:space-between; align-items:baseline; gap:1rem; text-shadow:var(--shadow)}
+.date{font-size:.95rem; font-weight:500; color:var(--soft)}
+.streak{font-size:.9rem; color:var(--soft); display:flex; align-items:center; gap:.35rem}
+.streak svg{width:14px; height:14px; fill:var(--accent)}
+main{display:flex; align-items:flex-start; padding-top:10vh; touch-action:pan-y}
+.quote-wrap{display:flex; flex-direction:column; align-items:flex-start}
+blockquote{font-family:var(--serif); font-style:italic; font-weight:500;
+  font-size:clamp(2.1rem, 8.5vw, 3.4rem); line-height:1.12; letter-spacing:-.01em;
+  max-width:18ch; text-wrap:balance; text-shadow:var(--shadow); transition:opacity .35s ease, transform .35s ease}
+blockquote.out{opacity:0; transform:translateY(6px)}
+.hint{margin-top:1.1rem; font-size:.95rem; color:var(--soft); text-shadow:var(--shadow); min-height:1.4em; max-width:30ch; line-height:1.4}
+.hint.breath{font-family:var(--serif); font-style:italic; font-size:1.5rem; color:#fff}
+.back-today{margin-top:.35rem; display:none; background:none; border:0; color:var(--text);
+  font:500 .9rem var(--sans); text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:.25rem 0; text-shadow:var(--shadow)}
+.past .back-today{display:inline-block}
+nav{margin:0 -1.5rem; padding:.8rem 1.25rem calc(env(safe-area-inset-bottom) + 1rem);
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:.5rem;
+  background:linear-gradient(to top, rgba(8,14,20,.5), rgba(8,14,20,0))}
+nav .side{display:flex; gap:.15rem; align-items:center}
+nav .side.right{justify-content:flex-end}
+.btn{background:none; border:0; cursor:pointer; color:#fff; font:500 .9rem var(--sans);
+  padding:.65rem .75rem; border-radius:999px; display:inline-flex; align-items:center; gap:.4rem}
+.btn:hover{background:rgba(255,255,255,.14)}
+.btn:focus-visible, .close:focus-visible, .hold:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.btn[hidden]{display:none}
+.btn svg{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+.btn.on svg{fill:var(--accent); stroke:var(--accent)}
+.hold{position:relative; width:72px; height:72px; border-radius:50%; border:0; cursor:pointer;
+  background:rgba(255,255,255,.12); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  touch-action:none; display:grid; place-items:center; transition:transform .3s ease, background .3s}
+.hold svg.ring{position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg)}
+.hold .track{fill:none; stroke:rgba(255,255,255,.35); stroke-width:2.5}
+.hold .prog{fill:none; stroke:var(--accent); stroke-width:3.5; stroke-linecap:round}
+.hold .core{width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.9); transition:transform .2s linear}
+.hold.done{background:rgba(255,184,201,.28)}
+.hold .wave, .hold .wave2{position:absolute; left:50%; top:50%; width:72px; height:72px; margin:-36px 0 0 -36px;
+  border-radius:48% 52% 50% 50% / 50% 47% 53% 50%; pointer-events:none; opacity:0; scale:1; transition:opacity .6s ease}
+.hold .wave{background:radial-gradient(circle, rgba(255,222,232,.55) 0%, rgba(255,184,201,.32) 50%, rgba(255,184,201,0) 71%); animation:blob 7s linear infinite}
+.hold .wave2{border:1.5px solid rgba(255,255,255,.55); animation:blob 9s linear infinite reverse}
+.hold.breathing .wave, .hold.breathing .wave2{opacity:1}
+@keyframes blob{
+  0%{transform:rotate(0deg); border-radius:48% 52% 50% 50% / 50% 47% 53% 50%}
+  33%{border-radius:53% 47% 46% 54% / 47% 54% 46% 53%}
+  66%{border-radius:46% 54% 53% 47% / 54% 48% 52% 46%}
+  100%{transform:rotate(360deg); border-radius:48% 52% 50% 50% / 50% 47% 53% 50%}}
+.app::before{content:""; position:fixed; left:0; right:0; top:0; height:58vh; pointer-events:none; z-index:-1;
+  background:linear-gradient(to bottom, rgba(10,14,40,.30) 0%, rgba(10,14,40,.18) 55%, rgba(10,14,40,0) 100%)}
+.hold.done .core{background:var(--accent)}
+.toast{position:fixed; z-index:5; left:50%; bottom:calc(env(safe-area-inset-bottom) + 7.5rem); transform:translate(-50%,10px);
+  background:var(--panel); color:var(--panel-ink); font-size:.9rem; padding:.6rem 1.1rem; border-radius:999px;
+  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; width:max-content; max-width:calc(100vw - 3rem); text-align:center; line-height:1.35; border-radius:1.2rem}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+.sheet{position:fixed; inset:0; z-index:10; overflow-y:auto; background:var(--panel); color:var(--panel-ink);
+  padding:calc(env(safe-area-inset-top) + 1.25rem) 1.5rem calc(env(safe-area-inset-bottom) + 2rem);
+  transform:translateY(100%); transition:transform .4s cubic-bezier(.2,.7,.2,1); visibility:hidden; -webkit-user-select:text; user-select:text}
+.sheet.open{transform:none; visibility:visible}
+.sheet-inner{max-width:640px; margin:0 auto}
+.sheet-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem}
+.sheet h2{font-family:var(--serif); font-style:italic; font-weight:600; font-size:2rem}
+.close{background:none; border:1px solid var(--panel-line); color:var(--panel-ink); font:500 .9rem var(--sans); padding:.5rem .9rem; border-radius:999px; cursor:pointer}
+.fav-list{list-style:none}
+.fav-list li{border-top:1px solid var(--panel-line); padding:1rem 0; display:flex; gap:1rem; justify-content:space-between; align-items:flex-start}
+.fav-list li:last-child{border-bottom:1px solid var(--panel-line)}
+.fav-list p{font-family:var(--serif); font-style:italic; font-size:1.4rem; line-height:1.25}
+.fav-list button{background:none; border:0; color:rgba(238,240,248,.7); font:500 .85rem var(--sans); cursor:pointer; padding:.3rem 0; white-space:nowrap}
+.empty{color:rgba(238,240,248,.7); line-height:1.6; max-width:36ch}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<div id="stars" aria-hidden="true"></div>
+<svg id="rainbow" viewBox="0 0 1000 500" aria-hidden="true">
+  <g fill="none" stroke-width="9" opacity=".75">
+    <circle cx="500" cy="500" r="470" stroke="#FF5A5A"/><circle cx="500" cy="500" r="461" stroke="#FF9F43"/>
+    <circle cx="500" cy="500" r="452" stroke="#FFE66D"/><circle cx="500" cy="500" r="443" stroke="#6BD66B"/>
+    <circle cx="500" cy="500" r="434" stroke="#4DB8FF"/><circle cx="500" cy="500" r="425" stroke="#6C6CFF"/>
+    <circle cx="500" cy="500" r="416" stroke="#B57CFF"/>
+  </g>
+</svg>
+<canvas class="fx" id="back" aria-hidden="true"></canvas>
+<div id="sun" aria-hidden="true"></div>
+<div id="mountains" aria-hidden="true">
+  <svg id="scene" viewBox="0 0 1600 600" preserveAspectRatio="xMidYMax slice">
+    <defs id="defs"></defs>
+    <g id="layers"></g>
+    <path id="meadow"/>
+    <g id="grass"></g>
+    <g id="tree"></g>
+  </svg>
+</div>
+<div id="fog" aria-hidden="true"></div>
+<canvas class="fx" id="front" aria-hidden="true"></canvas>
+<div id="flash" aria-hidden="true"></div>
+
+<div class="app">
+  <header>
+    <span class="meta"><span class="date" id="date"></span><span class="temp" id="temp"></span></span>
+    <span class="head-right">
+      <span class="streak" id="streak"></span>
+      <button class="btn gear" id="openSettings" aria-label="Réglages">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+      </button>
+    </span>
+  </header>
+  <main id="main">
+    <div class="quote-wrap" id="wrap">
+      <blockquote id="quote" aria-live="polite"></blockquote>
+      <p class="hint" id="hint" aria-live="polite"></p>
+      <button class="back-today" id="today"></button>
+    </div>
+  </main>
+  <nav>
+    <div class="side">
+      <button class="btn" id="prev" aria-label="Affirmation de la veille">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button class="btn" id="next" aria-label="Revenir vers aujourd’hui" hidden>
+        <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button class="btn" id="openFavs"></button>
+    </div>
+    <button class="hold" id="hold" aria-label="Maintenir 10 secondes pour respirer avec l’affirmation">
+      <span class="wave" id="wave"></span><span class="wave2" id="wave2"></span>
+      <svg class="ring" viewBox="0 0 72 72"><circle class="track" cx="36" cy="36" r="33"/><circle class="prog" id="prog" cx="36" cy="36" r="33"/></svg>
+      <span class="core" id="core"></span>
+    </button>
+    <div class="side right">
+      <button class="btn" id="fav" aria-pressed="false" aria-label="Garder dans mes favoris">
+        <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+      </button>
+      <button class="btn" id="share" aria-label="Partager">
+        <svg viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4M5 12v7h14v-7"/></svg>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<section class="sheet" id="sheet" aria-hidden="true" aria-labelledby="favTitle">
+  <div class="sheet-inner">
+    <div class="sheet-head">
+      <h2 id="favTitle"></h2>
+      <button class="close" id="closeFavs"></button>
+    </div>
+    <ul class="fav-list" id="favList"></ul>
+    <p class="empty" id="empty"></p>
+  </div>
+</section>
+<section class="sheet" id="settings" aria-hidden="true" aria-labelledby="setTitle">
+  <div class="sheet-inner">
+    <div class="sheet-head">
+      <h2 id="setTitle"></h2>
+      <button class="close" id="closeSettings"></button>
+    </div>
+    <div class="opt-group">
+      <h3 id="langTitle"></h3>
+      <div class="seg"><button data-lang="fr">Français</button><button data-lang="en">English</button></div>
+    </div>
+    <div class="opt-group">
+      <h3 id="locTitle"></h3>
+      <div class="seg"><button id="locDefault"></button><button id="locMine"></button></div>
+      <p class="note" id="locNote"></p>
+    </div>
+    <p class="note" id="credit"></p>
+  </div>
+</section>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ================= Données ================= */
+const DATA = {"fr": ["Chaque jour est une nouvelle chance de recommencer.", "Je commence ma journée par un souffle, pas par un écran.", "Je choisis la paix, la joie et l’amour aujourd’hui.", "Le premier moment de ma journée m’appartient.", "Le bonheur se cultive un petit pas à la fois.", "Mon attention est précieuse, je choisis où la poser.", "Je suis exactement là où je dois être.", "Je n’ai rien à rattraper ce matin.", "Tout ce que je cherche est déjà en moi.", "Le monde peut attendre quelques minutes, le temps que je m’éveille.", "Je suis capable, fort(e) et plein(e) de ressources.", "Je laisse le silence du matin me remplir.", "Les défis sont des opportunités déguisées.", "Je n’ai pas besoin de tout savoir pour bien commencer.", "Aujourd’hui, je célèbre mes petites victoires.", "Aujourd’hui, je fais une chose à la fois.", "La gratitude transforme ma vision du monde.", "Je bois mon premier café en pleine présence.", "J’ai le droit de briller sans m’excuser.", "Ma journée se construit geste après geste.", "Je fais de mon mieux, et c’est suffisant.", "Je remarque la lumière qui entre par la fenêtre.", "Le calme intérieur est ma superpuissance.", "Ce matin, je choisis la lenteur plutôt que l’urgence.", "Je mérite l’amour, la joie et la réussite.", "Chaque respiration m’ancre dans le moment présent.", "Rien ne presse autant que je le crois.", "Mon énergie attire ce que je vibre.", "Je peux commencer doucement et aller loin.", "Je suis libre d’écrire mon propre chemin.", "Mes pieds sur le sol me rappellent que je suis ici.", "Je rayonne de positivité et de bienveillance.", "Je laisse la nuit derrière moi et j’accueille ce jour neuf.", "J’apprends, je grandis, j’évolue chaque jour.", "Mon calme est contagieux.", "Le monde a besoin de ce que j’apporte.", "Une seule bonne intention suffit pour guider ma journée.", "Ma vie est un cadeau précieux.", "Je choisis une priorité et je lui fais de la place.", "Je transforme les obstacles en tremplins.", "Je ne remplis pas chaque silence.", "Aujourd’hui, je choisis de me faire confiance.", "Comme la montagne, je peux rester stable sous le vent.", "Mon sourire a le pouvoir d’illuminer une journée.", "Les saisons changent, et moi aussi, à mon rythme.", "Je suis entouré(e) d’abondance sous toutes ses formes.", "Un arbre ne se presse pas de fleurir.", "Je mérite de vivre une vie épanouie.", "La rivière contourne les rochers sans cesser d’avancer.", "Je libère ce qui ne me sert plus.", "Je suis maître de mes pensées et de mes émotions.", "Même l’hiver prépare le printemps.", "Chaque moment est une occasion de renaître.", "Je prends racine dans ce qui compte vraiment.", "Je m’aime profondément et inconditionnellement.", "Le soleil se lève chaque jour sans rien demander en retour.", "Aujourd’hui est une belle journée pour être heureux(se).", "Je suis comme le ciel : les nuages passent, je demeure.", "Je choisis de voir le bon en toute chose.", "La nature ne se compare pas, elle pousse.", "Mon cœur connaît le chemin, je l’écoute.", "Chaque graine plantée avec soin finit par germer.", "Ce que je sème aujourd’hui, je le récolterai demain.", "Je laisse mes pensées passer comme des nuages.", "J’ai le pouvoir de créer une belle réalité.", "Le vent tourne, et je sais ajuster mes voiles.", "Chaque matin est une promesse d’infini possible.", "Il y a de la beauté dans ce qui pousse lentement.", "La simplicité est une richesse.", "Je respire au rythme des arbres : lentement, profondément.", "Je suis fier(e) de qui je deviens.", "La lumière revient toujours après la nuit.", "Mon corps est mon allié, je l’honore.", "Je m’autorise à vivre pleinement.", "Je m’enracine avant de m’élever.", "Je laisse entrer la lumière, même dans les zones d’ombre.", "Les sommets se gravissent pas après pas.", "Je n’ai pas besoin d’être parfait(e) pour être aimable.", "Je suis une partie vivante de quelque chose de plus grand.", "Je choisis l’amour au lieu de la peur.", "Je remarque aujourd’hui trois choses belles autour de moi.", "Chaque pas, aussi petit soit-il, me rapproche de mes rêves.", "La neige fond sans effort quand vient son heure.", "Je suis un canal d’énergie créative.", "Je me parle comme je parlerais à un ami cher.", "Je me reconnecte à la magie du moment présent.", "Mes imperfections font partie de mon histoire.", "Je suis entouré(e) de belles âmes.", "Je peux échouer sans être un échec.", "Je crois en ma propre lumière.", "Je m’offre la patience que j’accorde aux autres.", "Mon intuition est une boussole fiable.", "Une mauvaise journée ne fait pas une mauvaise vie.", "Je me libère de ce qui alourdit mon cœur.", "J’ai le droit d’être fatigué(e) et de le reconnaître.", "J’ai confiance en la vie et en son timing parfait.", "Je n’ai rien à mériter pour prendre soin de moi.", "Je suis un être en constante évolution.", "Ce que je vis me prépare à mieux.", "Mes émotions passent, elles ne me définissent pas.", "Mon authenticité est mon plus beau cadeau.", "Je peux recommencer autant de fois qu’il le faut.", "Je laisse place à la douceur dans ma journée.", "Je pardonne à la personne que j’étais hier.", "Je mérite le repos, autant que la réussite.", "Je peux accueillir mes doutes sans leur obéir.", "Tout est en train de se mettre en place pour mon bien.", "Je ne confonds pas une pensée avec une vérité.", "Je suis exactement ce dont le monde a besoin.", "Je suis gentil(le) avec moi quand je trébuche.", "J’avance avec foi, même sans tout comprendre.", "Je peux dire « je ne sais pas » sans honte.", "L’univers conspire à mon bonheur.", "Mes besoins comptent autant que ceux des autres.", "Je me choisis, chaque jour, avec amour.", "Prendre soin de moi n’est pas de l’égoïsme.", "Aujourd’hui, je choisis la légèreté.", "Je n’ai pas à porter seul(e) tout ce qui pèse.", "Mon énergie attire ce que je mérite.", "Demander de l’aide est une forme de courage.", "Je suis plus fort(e) que mes peurs.", "Je relâche mes épaules et ma mâchoire.", "Chaque rencontre m’enseigne quelque chose.", "Je laisse mon passé derrière et avance avec confiance.", "Mon corps me parle, je prends le temps de l’écouter.", "J’ai le droit de ralentir et de respirer.", "Le repos fait partie du chemin, pas un détour.", "Mon potentiel est infini.", "Je laisse une place à l’imprévu dans ma journée.", "Je suis digne de vivre une vie extraordinaire.", "Je suis un peu plus doux(ce) avec moi que la veille.", "J’accueille le changement avec sérénité.", "Mes erreurs sont des brouillons, pas des verdicts.", "Mon esprit est clair, mon cœur est ouvert.", "Je m’autorise à ne pas être productif(ve) tout le temps.", "Je suis un miracle vivant.", "J’écoute vraiment la personne en face de moi.", "Je me reconnecte à ce qui m’émerveille.", "Un mot gentil peut changer la journée de quelqu’un.", "Je fais la paix avec ce que je ne contrôle pas.", "Aujourd’hui, je remercie quelqu’un sincèrement.", "Chaque jour, je me rapproche de la meilleure version de moi-même.", "Je choisis la curiosité plutôt que le jugement.", "Je mérite de recevoir autant que je donne.", "Je laisse aux autres le droit d’être différents.", "Ma vulnérabilité est une force.", "Je suis exactement comme je dois être en ce moment.", "Je peux aimer les gens sans vouloir les changer.", "Je me libère du besoin de tout comprendre.", "Aujourd’hui, je prends des nouvelles de quelqu’un qui compte.", "J’ai confiance en mon chemin, même s’il est unique.", "Mes liens se nourrissent de petites attentions.", "Je suis toujours en train d’apprendre, et c’est beau.", "Je donne sans compter, mais sans m’oublier.", "Aujourd’hui, je choisis d’aimer sans condition.", "Je regarde les gens dans les yeux plutôt que mon écran.", "Je suis entouré(e) de synchronicités bienveillantes.", "La gentillesse ne coûte rien et rapporte beaucoup.", "Mon âme connaît la direction.", "Je peux être en désaccord avec bienveillance.", "Je me donne la permission d’être heureux(se).", "Je me souviens que chacun mène un combat invisible.", "Chaque émotion a quelque chose à m’apprendre.", "Je célèbre la réussite des autres sans me diminuer.", "Mon silence intérieur est une source de paix.", "Aujourd’hui, je partage un vrai rire.", "Je suis libre de réinventer ma vie à tout moment.", "Je fais aujourd’hui le petit pas que je repousse.", "Je suis la seule personne à qui je dois ressembler.", "Le courage, c’est avancer même avec le cœur qui bat.", "Je suis ici pour une raison profonde et lumineuse.", "L’amour commence par moi.", "Je préfère essayer que regretter.", "J’ai tout en moi pour faire face à cette journée.", "Commencer imparfaitement vaut mieux que ne jamais commencer.", "Le présent est le seul endroit où la vie existe.", "Je tiens les promesses que je me fais.", "Je suis digne d’une vie pleine de sens.", "Je fais ce qui est en mon pouvoir et je laisse le reste.", "Ce que je ressens est valable et mérite d’être écouté.", "Je termine ce que je commence, une étape à la fois.", "Je suis en sécurité là où je suis.", "L’inconfort est souvent le signe que je grandis.", "Je peux être doux(ce) et puissant(e) à la fois.", "J’ose poser la question qui me trotte dans la tête.", "Mes rêves ont de la valeur.", "Chaque effort compte, même quand personne ne le voit.", "Je ne suis pas en retard sur ma vie.", "Je choisis la constance plutôt que l’intensité.", "Je laisse briller la lumière en moi.", "Dix minutes aujourd’hui valent mieux que rien du tout.", "Je suis fier(e) de mes progrès, même invisibles.", "Je peux faire des choses difficiles.", "Chaque jour est une œuvre d’art en devenir.", "Je ne laisse pas la peur choisir à ma place.", "Je choisis ce qui me fait du bien.", "Mon bonheur n’a pas besoin d’être justifié.", "Je n’attends pas d’être prêt(e) pour avancer.", "Je suis libre d’être qui je suis.", "Je savoure les petits plaisirs de ce jour.", "Je me donne le droit de faire des erreurs.", "Je remercie mon corps de m’avoir porté(e) jusqu’ici.", "Je suis un aimant à bonnes choses.", "Un toit, un lit, un matin de plus : c’est déjà beaucoup.", "Ma bienveillance est une force tranquille.", "Je remarque ce qui va bien avant ce qui manque.", "Le monde a besoin de plus de douceur, et j’y contribue.", "Le simple fait de respirer est un cadeau.", "Je ne suis pas seul(e), l’univers me soutient.", "Je goûte vraiment ce que je mange aujourd’hui.", "Je m’ouvre à l’inconnu avec confiance.", "J’accueille ce jour comme il vient.", "J’ai le droit de poser des limites saines.", "Je trouve de la joie dans l’ordinaire.", "Je suis en paix avec le moment présent.", "Une tasse chaude, une lumière douce : le bonheur tient à peu.", "Je suis plus que mes pensées.", "Je prends le temps de regarder le ciel aujourd’hui.", "Mon cœur s’ouvre à la gratitude.", "J’ai le courage de suivre ma propre voie.", "Je suis reconnaissant(e) pour les personnes qui m’entourent.", "Ma lumière n’enlève rien à celle des autres.", "Ici et maintenant, tout va bien.", "Je célèbre chaque pas accompli, petit ou grand.", "Je laisse mes sens m’ancrer dans l’instant.", "J’attire les bonnes personnes dans ma vie.", "Je marche aujourd’hui sans me presser.", "Je suis en constante renaissance.", "Je range mon téléphone et je regarde autour de moi.", "Aujourd’hui est une nouvelle chance d’aimer et de créer.", "Je choisis les pensées que je nourris.", "Je choisis d’être ma priorité aujourd’hui.", "Je peux observer mon stress sans me laisser emporter.", "Je suis capable d’amour profond et sincère.", "Mes inquiétudes ne sont pas des prédictions.", "Chaque instant est une page blanche à remplir de beauté.", "Je reviens à mon souffle chaque fois que je m’égare.", "Je mérite la douceur que j’offre aux autres.", "Une pensée à la fois, un pas à la fois.", "J’ai le droit de dire non sans culpabilité.", "Je ne crois pas tout ce que mon mental me raconte.", "Je suis en paix avec le rythme de ma vie.", "Le calme est toujours là, à une respiration près.", "Je suis guidé(e) à chaque étape de mon chemin.", "Je transforme mes peurs en force intérieure.", "Je transforme « je dois » en « je choisis ».", "Je suis aligné(e) avec mes valeurs les plus profondes.", "Je laisse de l’espace entre ce qui m’arrive et ma réaction.", "Je suis un(e) créateur(trice) de moments heureux.", "Ce que je ne peux pas changer, je peux l’accueillir autrement.", "Mon authenticité inspire les autres.", "Je ralentis quand tout s’accélère.", "Je me connecte à la beauté de l’instant.", "Je ne suis pas obligé(e) de répondre tout de suite.", "Je suis libre d’aimer et d’être aimé(e).", "Mon esprit a besoin de vide pour créer.", "La paix commence en moi.", "L’ennui est parfois le début d’une idée.", "Je suis exactement à la bonne place pour évoluer.", "Je protège ma tranquillité.", "Je suis en train de construire une belle vie.", "Je fais aujourd’hui une chose qui a du sens pour moi.", "Je mérite des relations saines et nourrissantes.", "Je mesure ma journée à sa qualité, pas à sa quantité.", "Mon âme sait ce qui est bon pour moi.", "Ce qui compte vraiment tient souvent en peu de mots.", "Je m’ouvre à tout ce que la vie a de bon à m’offrir.", "Je vis selon mes valeurs, pas selon les attentes des autres.", "Je rayonne de confiance et de calme.", "Je suis un travail en progrès et j’honore chaque étape.", "J’ai une contribution à apporter, même modeste.", "Je m’autorise à guérir à mon propre rythme.", "Je laisse une trace de gentillesse là où je passe.", "La sérénité m’habite plus que le doute.", "Je choisis l’essentiel et je laisse le superflu.", "Je suis fier(e) de la personne que je deviens.", "Mes choix d’aujourd’hui dessinent la personne de demain.", "J’ai en moi la capacité d’aimer inconditionnellement.", "Je peux faire le bien à ma mesure.", "Je laisse partir ce qui ne m’élève pas.", "Je me demande ce qui compterait encore dans dix ans.", "Je suis la paix que je veux voir dans le monde.", "Réussir, c’est aussi savoir s’arrêter.", "Chaque jour m’offre une nouvelle perspective.", "Je préfère une vie riche de sens à une vie pleine d’agitation.", "Je suis guidé(e) vers ce qui me fait vibrer.", "J’agis pour le monde que j’aimerais voir.", "La joie m’accompagne dans tout ce que je fais.", "Je prends soin de la planète comme d’une maison commune.", "Je mérite de me sentir bien, ici et maintenant.", "Chaque geste sobre est un cadeau fait à demain.", "Ma présence suffit, je n’ai rien à prouver.", "J’accueille ce jour avec un cœur ouvert.", "Je grandis même quand je ne le remarque pas.", "Je suis en train d’écrire une histoire magnifique.", "Chaque jour, j’arrose ce que je veux voir fleurir.", "Mes pensées ont du pouvoir, je les choisis avec soin.", "Je suis curieux(se) de ce que ce jour va m’apprendre.", "Je suis une âme lumineuse dans un monde en mouvement.", "J’apprends autant de mes détours que de mes réussites.", "Je fais confiance à mon processus intérieur.", "Mes habitudes d’aujourd’hui sont les racines de demain.", "Tout ce dont j’ai besoin se trouve déjà en moi.", "Je regarde d’où je viens avant de juger où j’en suis.", "Je me reconnecte à la magie du quotidien.", "Je reste ouvert(e) à changer d’avis.", "Je suis un(e) messager(ère) de paix et d’harmonie.", "Une nouvelle habitude commence par un seul jour.", "Aujourd’hui, je me concentre sur ce qui m’élève.", "J’apprends quelque chose de nouveau aujourd’hui.", "Je suis une source de lumière pour moi et les autres.", "Je garde une trace de mes petites joies.", "Je me laisse guider par la joie.", "Ce soir, je rendrai à mon esprit un peu de silence.", "Je me permets de rêver grand.", "Je choisis de m’endormir sur une belle pensée.", "Je mérite de réussir sans me sacrifier.", "Je fais de mon mieux, et cela suffit amplement.", "Ma journée n’a pas besoin d’être parfaite pour être bonne.", "Je me libère du regard des autres.", "Je laisse mon téléphone loin de mon lit.", "Je suis un espace d’amour et d’accueil.", "Moins d’écrans, plus de présence.", "Mon avenir est prometteur et rempli de belles surprises.", "Je reprends la main sur mon temps, minute après minute.", "Je suis à l’écoute de mon cœur.", "Je n’ai pas besoin de tout voir pour être bien informé(e).", "Chaque respiration me ramène à l’essentiel.", "Je choisis ce qui nourrit mon esprit.", "Je suis une œuvre d’art en constante évolution.", "Je m’accorde des pauses sans écran.", "Je n’ai pas besoin d’aller vite, juste d’avancer.", "Le vrai repos commence quand je me déconnecte.", "Je crée un monde intérieur paisible et rayonnant.", "Je m’autorise à rire de moi avec tendresse.", "Je m’autorise à ressentir profondément.", "Je mets un peu de jeu dans ma journée.", "Je suis une étincelle d’éveil dans ce monde.", "Je chante, je danse ou je souris sans raison.", "Je me donne le droit de changer.", "La légèreté est aussi une sagesse.", "Mon bonheur ne dépend que de moi.", "Je suis dans un cycle de renouveau bienveillant.", "Je cherche l’émerveillement dans un détail.", "Chaque jour est un pas de plus vers ma vérité.", "Je m’offre un petit cadeau aujourd’hui : du temps.", "Je suis libre de créer la vie qui m’inspire.", "J’ai le droit de m’amuser sans but.", "Je choisis de me traiter avec tendresse.", "Je laisse un sourire venir sans chercher pourquoi.", "Mon énergie attire les bonnes opportunités.", "L’enfant que j’étais a encore des choses à m’apprendre.", "Je me reconnecte à ce qui me fait vibrer.", "Je choisis ce qui me rend vivant(e).", "J’avance avec foi, même dans l’inconnu.", "Aujourd’hui, je fais quelque chose pour la première fois.", "Je suis un canal d’amour, de paix et de lumière.", "Je sors prendre l’air, même quelques minutes.", "Ma valeur ne dépend pas de ce que je fais, mais de qui je suis.", "La beauté se trouve là où je pose mon regard.", "Aujourd’hui, je laisse parler mon cœur.", "Je veux finir cette journée plus léger(e) que je ne l’ai commencée.", "Je suis entouré(e) de beauté, même dans les choses simples.", "Demain est une page que je n’ai pas besoin d’écrire aujourd’hui.", "Je mérite des moments de calme et de douceur."], "en": ["Every day is a new chance to begin again.", "I start my day with a breath, not a screen.", "Today I choose peace, joy and love.", "The first moment of my day belongs to me.", "Happiness grows one small step at a time.", "My attention is precious; I choose where to place it.", "I am exactly where I need to be.", "I have nothing to catch up on this morning.", "Everything I am looking for is already within me.", "The world can wait a few minutes while I wake up.", "I am capable, strong and resourceful.", "I let the morning silence fill me.", "Challenges are opportunities in disguise.", "I don’t need to know everything to start well.", "Today I celebrate my small victories.", "Today I do one thing at a time.", "Gratitude transforms the way I see the world.", "I drink my first coffee fully present.", "I have the right to shine without apologizing.", "My day is built one gesture at a time.", "I do my best, and that is enough.", "I notice the light coming through the window.", "Inner calm is my superpower.", "This morning I choose slowness over urgency.", "I deserve love, joy and success.", "Each breath anchors me in the present moment.", "Nothing is as urgent as I think.", "My energy attracts what I vibrate.", "I can start gently and still go far.", "I am free to write my own path.", "My feet on the ground remind me that I am here.", "I radiate positivity and kindness.", "I leave the night behind and welcome this new day.", "I learn, I grow, I evolve every day.", "My calm is contagious.", "The world needs what I bring.", "One good intention is enough to guide my day.", "My life is a precious gift.", "I choose one priority and make room for it.", "I turn obstacles into stepping stones.", "I don’t fill every silence.", "Today I choose to trust myself.", "Like the mountain, I can stay steady in the wind.", "My smile has the power to brighten a day.", "The seasons change, and so do I, at my own pace.", "I am surrounded by abundance in all its forms.", "A tree is in no hurry to blossom.", "I deserve to live a fulfilling life.", "The river flows around the rocks and keeps moving.", "I let go of what no longer serves me.", "I am the master of my thoughts and emotions.", "Even winter is preparing the spring.", "Every moment is a chance to be reborn.", "I take root in what truly matters.", "I love myself deeply and unconditionally.", "The sun rises every day without asking for anything in return.", "Today is a beautiful day to be happy.", "I am like the sky: clouds pass, I remain.", "I choose to see the good in everything.", "Nature doesn’t compare itself; it grows.", "My heart knows the way, and I listen to it.", "Every seed planted with care eventually sprouts.", "What I sow today, I will reap tomorrow.", "I let my thoughts drift by like clouds.", "I have the power to create a beautiful reality.", "The wind shifts, and I know how to adjust my sails.", "Every morning holds a promise of endless possibility.", "There is beauty in what grows slowly.", "Simplicity is a form of wealth.", "I breathe at the pace of the trees: slowly, deeply.", "I am proud of who I am becoming.", "The light always returns after the night.", "My body is my ally, and I honor it.", "I allow myself to live fully.", "I take root before I rise.", "I let the light in, even into the shadows.", "Summits are climbed one step at a time.", "I don’t need to be perfect to be lovable.", "I am a living part of something greater.", "I choose love over fear.", "Today I notice three beautiful things around me.", "Every step, however small, brings me closer to my dreams.", "Snow melts effortlessly when its time comes.", "I am a channel for creative energy.", "I speak to myself as I would to a dear friend.", "I reconnect with the magic of the present moment.", "My imperfections are part of my story.", "I am surrounded by beautiful souls.", "I can fail without being a failure.", "I believe in my own light.", "I give myself the patience I give others.", "My intuition is a reliable compass.", "A bad day doesn’t make a bad life.", "I release what weighs on my heart.", "I have the right to be tired and to admit it.", "I trust life and its perfect timing.", "I don’t have to earn the right to take care of myself.", "I am a being in constant evolution.", "What I am living through is preparing me for better.", "My emotions pass; they do not define me.", "My authenticity is my greatest gift.", "I can begin again as many times as I need.", "I make room for gentleness in my day.", "I forgive the person I was yesterday.", "I deserve rest as much as success.", "I can welcome my doubts without obeying them.", "Everything is falling into place for my good.", "I don’t mistake a thought for the truth.", "I am exactly what the world needs.", "I am kind to myself when I stumble.", "I move forward with faith, even without understanding everything.", "I can say “I don’t know” without shame.", "The universe is conspiring for my happiness.", "My needs matter as much as anyone else’s.", "I choose myself, every day, with love.", "Taking care of myself is not selfish.", "Today I choose lightness.", "I don’t have to carry everything alone.", "My energy attracts what I deserve.", "Asking for help is a form of courage.", "I am stronger than my fears.", "I relax my shoulders and my jaw.", "Every encounter teaches me something.", "I leave my past behind and move forward with confidence.", "My body speaks to me, and I take the time to listen.", "I have the right to slow down and breathe.", "Rest is part of the path, not a detour.", "My potential is limitless.", "I leave room for the unexpected in my day.", "I am worthy of an extraordinary life.", "I am a little gentler with myself than yesterday.", "I welcome change with serenity.", "My mistakes are drafts, not verdicts.", "My mind is clear, my heart is open.", "I allow myself not to be productive all the time.", "I am a living miracle.", "I truly listen to the person in front of me.", "I reconnect with what fills me with wonder.", "A kind word can change someone’s day.", "I make peace with what I cannot control.", "Today I sincerely thank someone.", "Every day, I move closer to the best version of myself.", "I choose curiosity over judgment.", "I deserve to receive as much as I give.", "I let others be different.", "My vulnerability is a strength.", "I am exactly as I need to be right now.", "I can love people without wanting to change them.", "I free myself from the need to understand everything.", "Today I check in on someone who matters.", "I trust my path, even if it is unlike any other.", "My relationships are nourished by small attentions.", "I am always learning, and that is beautiful.", "I give generously, without forgetting myself.", "Today I choose to love without conditions.", "I look people in the eye rather than at my screen.", "I am surrounded by kind synchronicities.", "Kindness costs nothing and gives back so much.", "My soul knows the way.", "I can disagree with kindness.", "I give myself permission to be happy.", "I remember that everyone is fighting an invisible battle.", "Every emotion has something to teach me.", "I celebrate others’ success without diminishing myself.", "My inner silence is a source of peace.", "Today I share a real laugh.", "I am free to reinvent my life at any moment.", "Today I take the small step I keep putting off.", "The only person I need to resemble is myself.", "Courage is moving forward even with a pounding heart.", "I am here for a deep and luminous reason.", "Love begins with me.", "I would rather try than regret.", "I have everything within me to face this day.", "Starting imperfectly beats never starting.", "The present is the only place where life exists.", "I keep the promises I make to myself.", "I am worthy of a meaningful life.", "I do what is in my power and let go of the rest.", "What I feel is valid and deserves to be heard.", "I finish what I start, one step at a time.", "I am safe where I am.", "Discomfort is often a sign that I am growing.", "I can be gentle and powerful at the same time.", "I dare to ask the question that has been on my mind.", "My dreams have value.", "Every effort counts, even when no one sees it.", "I am not behind in my life.", "I choose consistency over intensity.", "I let the light within me shine.", "Ten minutes today are better than nothing at all.", "I am proud of my progress, even when it’s invisible.", "I can do hard things.", "Every day is a work of art in the making.", "I don’t let fear choose for me.", "I choose what is good for me.", "My happiness needs no justification.", "I don’t wait to feel ready before moving forward.", "I am free to be who I am.", "I savor the small pleasures of this day.", "I give myself the right to make mistakes.", "I thank my body for carrying me this far.", "I am a magnet for good things.", "A roof, a bed, one more morning: that’s already a lot.", "My kindness is a quiet strength.", "I notice what is going well before what is missing.", "The world needs more gentleness, and I contribute to it.", "Simply breathing is a gift.", "I am not alone; the universe supports me.", "Today I truly taste what I eat.", "I open myself to the unknown with confidence.", "I welcome this day as it comes.", "I have the right to set healthy boundaries.", "I find joy in the ordinary.", "I am at peace with the present moment.", "A warm cup, a soft light: happiness takes so little.", "I am more than my thoughts.", "Today I take the time to look at the sky.", "My heart opens to gratitude.", "I have the courage to follow my own path.", "I am grateful for the people around me.", "My light takes nothing away from anyone else’s.", "Here and now, all is well.", "I celebrate every step taken, small or large.", "I let my senses anchor me in the moment.", "I attract the right people into my life.", "Today I walk without rushing.", "I am constantly being reborn.", "I put my phone away and look around me.", "Today is a new chance to love and to create.", "I choose which thoughts I feed.", "Today I choose to make myself a priority.", "I can observe my stress without being swept away.", "I am capable of deep and sincere love.", "My worries are not predictions.", "Every moment is a blank page to fill with beauty.", "I return to my breath every time I drift.", "I deserve the gentleness I offer others.", "One thought at a time, one step at a time.", "I have the right to say no without guilt.", "I don’t believe everything my mind tells me.", "I am at peace with the pace of my life.", "Calm is always there, one breath away.", "I am guided at every step of my path.", "I transform my fears into inner strength.", "I turn “I have to” into “I choose to”.", "I am aligned with my deepest values.", "I leave space between what happens to me and how I react.", "I create happy moments.", "What I cannot change, I can welcome differently.", "My authenticity inspires others.", "I slow down when everything speeds up.", "I connect with the beauty of the moment.", "I don’t have to answer right away.", "I am free to love and to be loved.", "My mind needs empty space to create.", "Peace begins within me.", "Boredom is sometimes the beginning of an idea.", "I am exactly in the right place to grow.", "I protect my peace of mind.", "I am building a beautiful life.", "Today I do one thing that is meaningful to me.", "I deserve healthy, nourishing relationships.", "I measure my day by its quality, not its quantity.", "My soul knows what is good for me.", "What truly matters often fits in a few words.", "I open myself to all the good life has to offer.", "I live by my values, not by others’ expectations.", "I radiate confidence and calm.", "I am a work in progress, and I honor every stage.", "I have something to contribute, however modest.", "I allow myself to heal at my own pace.", "I leave a trace of kindness wherever I go.", "Serenity lives in me more than doubt.", "I choose the essential and let go of the superfluous.", "I am proud of the person I am becoming.", "My choices today shape the person I will be tomorrow.", "I have within me the capacity to love unconditionally.", "I can do good in my own way.", "I let go of what does not lift me up.", "I ask myself what would still matter in ten years.", "I am the peace I want to see in the world.", "Success also means knowing when to stop.", "Each day offers me a new perspective.", "I prefer a life rich in meaning to a life full of agitation.", "I am guided toward what makes me come alive.", "I act for the world I would like to see.", "Joy goes with me in everything I do.", "I care for the planet as a home we all share.", "I deserve to feel good, here and now.", "Living lightly today is a gift to tomorrow.", "My presence is enough; I have nothing to prove.", "I welcome this day with an open heart.", "I am growing even when I don’t notice it.", "I am writing a magnificent story.", "Every day, I water what I want to see bloom.", "My thoughts have power, and I choose them with care.", "I am curious about what this day will teach me.", "I am a bright soul in a world in motion.", "I learn as much from my detours as from my successes.", "I trust my inner process.", "Today’s habits are tomorrow’s roots.", "Everything I need is already within me.", "I look at where I come from before judging where I am.", "I reconnect with the magic of everyday life.", "I stay open to changing my mind.", "I am a messenger of peace and harmony.", "A new habit begins with a single day.", "Today I focus on what lifts me up.", "Today I learn something new.", "I am a source of light for myself and others.", "I keep track of my small joys.", "I let joy guide me.", "Tonight, I will give my mind a little silence.", "I allow myself to dream big.", "I choose to fall asleep on a beautiful thought.", "I deserve to succeed without sacrificing myself.", "I do my best, and that is more than enough.", "My day doesn’t have to be perfect to be good.", "I free myself from what others think.", "I leave my phone far from my bed.", "I am a space of love and welcome.", "Fewer screens, more presence.", "My future is bright and full of beautiful surprises.", "I take back my time, minute by minute.", "I listen to my heart.", "I don’t need to see everything to be well informed.", "Each breath brings me back to what matters.", "I choose what nourishes my mind.", "I am a work of art in constant evolution.", "I give myself screen-free breaks.", "I don’t need to go fast, just to keep going.", "True rest begins when I disconnect.", "I create a peaceful, radiant inner world.", "I allow myself to laugh at myself, tenderly.", "I allow myself to feel deeply.", "I bring a little play into my day.", "I am a spark of awakening in this world.", "I sing, dance or smile for no reason.", "I give myself the right to change.", "Lightness is a kind of wisdom too.", "My happiness depends on me alone.", "I am in a cycle of gentle renewal.", "I look for wonder in a small detail.", "Every day is one more step toward my truth.", "Today I give myself a small gift: time.", "I am free to create a life that inspires me.", "I have the right to have fun for no purpose.", "I choose to treat myself with tenderness.", "I let a smile come without asking why.", "My energy attracts the right opportunities.", "The child I once was still has things to teach me.", "I reconnect with what thrills me.", "I choose what makes me feel alive.", "I move forward with faith, even into the unknown.", "Today I do something for the first time.", "I am a channel of love, peace and light.", "I step outside for some fresh air, even for a few minutes.", "My worth depends not on what I do, but on who I am.", "Beauty is wherever I choose to look.", "Today I let my heart speak.", "I want to end this day lighter than I began it.", "I am surrounded by beauty, even in simple things.", "Tomorrow is a page I don’t need to write today.", "I deserve moments of calm and gentleness."]};
+const N = DATA.fr.length;
+const START = new Date(2026, 8, 18);
+const HOLD_MS = 10000;
+const DAY_START_HOUR = 5; // la nouvelle affirmation arrive à 5 h, pas à minuit : rien à découvrir la nuit
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Aperçu : ?h=6.5 (heure), ?d=2027-01-15 (date), ?g=30 (jours validés, pour voir l’arbre) */
+const P = new URLSearchParams(location.search);
+function now(){
+  const d = new Date();
+  if (P.get("d")){ const [y,m,dd] = P.get("d").split("-").map(Number); d.setFullYear(y, m-1, dd); }
+  if (P.get("h")){ const h = parseFloat(P.get("h")); d.setHours(Math.floor(h), Math.round((h%1)*60), 0, 0); }
+  return d;
+}
+const mod = (x, m) => ((x % m) + m) % m;
+const logical = d => new Date(d.getTime() - DAY_START_HOUR * 3600000);
+const dayNumber = d => Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(START.getFullYear(), START.getMonth(), START.getDate())) / 86400000);
+const keyOf = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+const store = {
+  get(k, f){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch(e){ return f; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+let favs = store.get("aube-favs2", null);
+if (!Array.isArray(favs)){
+  const old = store.get("aube-favs", []);
+  favs = old.map(x => DATA.fr.indexOf(x)).filter(i => i > -1);
+  store.set("aube-favs2", favs);
+}
+let days = new Set(store.get("aube-days", []));
+let back = 0;
+let lang = store.get("aube-lang", (navigator.language || "fr").toLowerCase().startsWith("fr") ? "fr" : "en");
+if (P.get("lang")) lang = P.get("lang") === "en" ? "en" : "fr";
+const A = () => DATA[lang];
+const T = {
+  fr: {
+    locale:"fr-FR", today:"Revenir à aujourd’hui", favs:"Favoris", favTitle:"Mes favoris", close:"Fermer",
+    empty:"Aucun favori pour l’instant. Touche le cœur quand une affirmation te parle, pour pouvoir la relire ici.",
+    yesterday:"Celle d’hier.", pastOf:d => "Celle du " + d + ".",
+    lateDone:"Pose ton téléphone. Demain matin, une nouvelle affirmation t’attend.",
+    late:"Il est tard. Lis-la une fois, respire, puis pose ton téléphone.",
+    done:"Tu as pris du temps pour toi ce matin. Belle journée.", hint:"Maintiens le cercle 10 secondes et respire avec elle.",
+    start:"Commence ta série", one:"1 jour", many:n => n + " jours d’affilée",
+    unfav:"Retirée des favoris", fav:"Gardée dans tes favoris", copied:"Copiée", noCopy:"Copie impossible ici", remove:"Retirer",
+    inhale:"Inspire…", exhale:"Expire lentement…", goToday:"Reviens à aujourd’hui pour prendre ton moment",
+    already:"Tu as déjà pris du temps pour toi ce matin, à demain 🌸", keep:"Garde le doigt posé jusqu’au bout du cercle.",
+    wellStarted:"Journée bien commencée",
+    anniv:n => n === 1 ? "Un an de moments pour toi aujourd’hui 🌸" : n + " ans de moments pour toi aujourd’hui 🌸", wellStreak:n => `Journée bien commencée, ${n} jours d’affilée`,
+    settings:"Réglages", langTitle:"Langue", locTitle:"Lieu pour le soleil et la météo",
+    locDefault:"Isère (par défaut)", locMine:"Ma position",
+    locNoteDefault:"Le ciel et la météo suivent l’Isère. Aucune autorisation demandée.",
+    locNoteMine:"Le ciel et la météo suivent ta dernière position enregistrée.",
+    locDenied:"Position refusée ou indisponible, retour à l’Isère.",
+    credit:'Météo : <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0).',
+    labels:{ prev:"Affirmation de la veille", next:"Revenir vers aujourd’hui", hold:"Maintenir 10 secondes pour respirer avec l’affirmation", favBtn:"Garder dans mes favoris", share:"Partager", gear:"Réglages" }
+  },
+  en: {
+    locale:"en-GB", today:"Back to today", favs:"Favourites", favTitle:"My favourites", close:"Close",
+    empty:"No favourites yet. Tap the heart when an affirmation speaks to you, so you can read it again here.",
+    yesterday:"Yesterday’s.", pastOf:d => "From " + d + ".",
+    lateDone:"Put your phone down. A new affirmation is waiting for you tomorrow morning.",
+    late:"It’s late. Read it once, breathe, then put your phone down.",
+    done:"You took some time for yourself this morning. Have a lovely day.", hint:"Hold the circle for 10 seconds and breathe with it.",
+    start:"Start your streak", one:"1 day", many:n => n + " days in a row",
+    unfav:"Removed from favourites", fav:"Saved to your favourites", copied:"Copied", noCopy:"Can’t copy here", remove:"Remove",
+    inhale:"Breathe in…", exhale:"Breathe out slowly…", goToday:"Go back to today to take your moment",
+    already:"You’ve already taken time for yourself this morning, see you tomorrow 🌸", keep:"Keep your finger down until the circle is full.",
+    wellStarted:"Day well begun",
+    anniv:n => n === 1 ? "One year of taking time for yourself today 🌸" : n + " years of taking time for yourself today 🌸", wellStreak:n => `Day well begun, ${n} days in a row`,
+    settings:"Settings", langTitle:"Language", locTitle:"Location for sun and weather",
+    locDefault:"Isère (default)", locMine:"My location",
+    locNoteDefault:"Sky and weather follow Isère, France. No permission needed.",
+    locNoteMine:"Sky and weather follow your last saved location.",
+    locDenied:"Location denied or unavailable, back to Isère.",
+    credit:'Weather: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0).',
+    labels:{ prev:"Previous day’s affirmation", next:"Towards today", hold:"Hold for 10 seconds to breathe with the affirmation", favBtn:"Save to favourites", share:"Share", gear:"Settings" }
+  }
+};
+const t = () => T[lang];
+const DEFAULT_LOC = { lat: 45.39, lon: 5.73, mine: false };
+let loc = store.get("aube-loc", DEFAULT_LOC);
+
+const $ = id => document.getElementById(id);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const fmt = (d, o) => d.toLocaleDateString(t().locale, o);
+
+function totalDays(){ return P.get("g") ? parseInt(P.get("g"), 10) : days.size; }
+function doneToday(){ return P.get("g") ? false : days.has(keyOf(logical(now()))); }
+function streak(){
+  const d = logical(now()); let c = 0;
+  if (!days.has(keyOf(d))) d.setDate(d.getDate() - 1);
+  while (days.has(keyOf(d))){ c++; d.setDate(d.getDate() - 1); }
+  return c;
+}
+const currentIndex = () => mod(dayNumber(logical(now())) - back, N);
+const maxBack = () => Math.max(0, dayNumber(logical(now())));
+
+/* ================= Affichage texte ================= */
+const q = $("quote");
+function setHint(text, breath){ const h = $("hint"); h.textContent = text; h.classList.toggle("breath", !!breath); }
+function defaultHint(){
+  const h = now().getHours();
+  if (back > 0){
+    const pd = logical(now()); pd.setDate(pd.getDate() - back);
+    return back === 1 ? t().yesterday : t().pastOf(fmt(pd, { weekday:"long", day:"numeric", month:"long" }));
+  }
+  if (h >= 21 || h < 5) return doneToday() ? t().lateDone : t().late;
+  return doneToday() ? "" : t().hint; // une fois le moment pris, écran épuré (le message n’apparaît qu’en toast)
+}
+function renderStreak(){
+  const s = streak();
+  $("streak").innerHTML = '<svg viewBox="0 0 20 20"><circle cx="10" cy="5" r="3.5"/><circle cx="15" cy="9" r="3.5"/><circle cx="13" cy="15" r="3.5"/><circle cx="7" cy="15" r="3.5"/><circle cx="5" cy="9" r="3.5"/></svg>' +
+    "<span>" + s + "</span>";
+  $("streak").title = s === 0 ? t().start : s === 1 ? t().one : t().many(s);
+  $("streak").setAttribute("aria-label", $("streak").title);
+}
+function renderQuote(animate){
+  const i = currentIndex();
+  const apply = () => { q.textContent = A()[i]; q.classList.remove("out"); };
+  if (animate && !REDUCED){ q.classList.add("out"); setTimeout(apply, 180); } else apply();
+  $("date").textContent = cap(fmt(now(), { weekday:"long", day:"numeric", month:"long" }));
+  $("wrap").classList.toggle("past", back > 0);
+  $("prev").hidden = back >= maxBack();
+  $("next").hidden = back === 0;
+  if (!holding) setHint(defaultHint());
+  const on = favs.includes(i);
+  $("fav").classList.toggle("on", on);
+  $("fav").setAttribute("aria-pressed", on);
+  $("hold").classList.toggle("done", doneToday());
+  $("hold").style.opacity = back > 0 ? .45 : 1;
+  renderStreak();
+}
+function go(delta){
+  const nb = Math.min(maxBack(), Math.max(0, back - delta));
+  if (nb !== back){ back = nb; renderQuote(true); }
+}
+$("prev").onclick = () => go(-1);
+$("next").onclick = () => go(1);
+$("today").onclick = () => { back = 0; renderQuote(true); };
+document.addEventListener("keydown", e => {
+  if ($("sheet").classList.contains("open")){ if (e.key === "Escape") closeFavs(); return; }
+  if ($("settings").classList.contains("open")){ if (e.key === "Escape") closeSettings(); return; }
+  if (e.key === "ArrowLeft") go(-1);
+  if (e.key === "ArrowRight") go(1);
+});
+let sx = null;
+$("main").addEventListener("touchstart", e => { sx = e.touches[0].clientX; }, { passive:true });
+$("main").addEventListener("touchend", e => {
+  if (sx === null) return; const dx = e.changedTouches[0].clientX - sx;
+  if (Math.abs(dx) > 50) go(dx > 0 ? -1 : 1); sx = null;
+});
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2400); }
+$("fav").onclick = () => {
+  const a = currentIndex();
+  if (favs.includes(a)){ favs = favs.filter(x => x !== a); toast(t().unfav); }
+  else { favs.unshift(a); toast(t().fav); }
+  store.set("aube-favs2", favs); renderQuote(false);
+};
+$("share").onclick = async () => {
+  const text = A()[currentIndex()];
+  try { if (navigator.share){ await navigator.share({ text }); return; } } catch(e){ if (e && e.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(text); toast(t().copied); } catch(e){ toast(t().noCopy); }
+};
+function renderFavs(){
+  const ul = $("favList"); ul.innerHTML = "";
+  $("empty").style.display = favs.length ? "none" : "block";
+  favs.forEach(a => {
+    const li = document.createElement("li");
+    const p = document.createElement("p"); p.textContent = A()[a];
+    const b = document.createElement("button"); b.textContent = t().remove;
+    b.onclick = () => { favs = favs.filter(x => x !== a); store.set("aube-favs2", favs); renderFavs(); renderQuote(false); };
+    li.append(p, b); ul.append(li);
+  });
+}
+function openFavs(){ renderFavs(); $("sheet").classList.add("open"); $("sheet").setAttribute("aria-hidden","false"); $("closeFavs").focus(); }
+function closeFavs(){ $("sheet").classList.remove("open"); $("sheet").setAttribute("aria-hidden","true"); $("openFavs").focus(); }
+$("openFavs").onclick = openFavs; $("closeFavs").onclick = closeFavs;
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  const L = t();
+  $("today").textContent = L.today; $("openFavs").textContent = L.favs; $("favTitle").textContent = L.favTitle;
+  $("closeFavs").textContent = L.close; $("closeSettings").textContent = L.close; $("empty").textContent = L.empty;
+  $("setTitle").textContent = L.settings; $("langTitle").textContent = L.langTitle; $("locTitle").textContent = L.locTitle;
+  $("locDefault").textContent = L.locDefault; $("locMine").textContent = L.locMine; $("credit").innerHTML = L.credit;
+  $("locNote").textContent = loc.mine ? L.locNoteMine : L.locNoteDefault;
+  $("prev").setAttribute("aria-label", L.labels.prev); $("next").setAttribute("aria-label", L.labels.next);
+  $("hold").setAttribute("aria-label", L.labels.hold); $("fav").setAttribute("aria-label", L.labels.favBtn);
+  $("share").setAttribute("aria-label", L.labels.share); $("openSettings").setAttribute("aria-label", L.labels.gear);
+  document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lang));
+  $("locDefault").setAttribute("aria-pressed", !loc.mine); $("locMine").setAttribute("aria-pressed", !!loc.mine);
+  if ($("favList").children.length) renderFavs();
+}
+document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => {
+  lang = b.dataset.lang; store.set("aube-lang", lang); applyLang(); renderQuote(true); renderTemp();
+});
+function openSettings(){ applyLang(); $("settings").classList.add("open"); $("settings").setAttribute("aria-hidden","false"); $("closeSettings").focus(); }
+function closeSettings(){ $("settings").classList.remove("open"); $("settings").setAttribute("aria-hidden","true"); $("openSettings").focus(); }
+$("openSettings").onclick = openSettings; $("closeSettings").onclick = closeSettings;
+$("locDefault").onclick = () => { loc = DEFAULT_LOC; store.set("aube-loc", loc); applyLang(); paint(); fetchWeather(); };
+$("locMine").onclick = () => {
+  if (!navigator.geolocation){ toast(t().locDenied); return; }
+  navigator.geolocation.getCurrentPosition(p => {
+    loc = { lat: +p.coords.latitude.toFixed(2), lon: +p.coords.longitude.toFixed(2), mine: true };
+    store.set("aube-loc", loc); applyLang(); paint(); fetchWeather();
+  }, () => { loc = DEFAULT_LOC; store.set("aube-loc", loc); applyLang(); toast(t().locDenied); }, { timeout: 10000, maximumAge: 3600000 });
+};
+
+/* ================= Maintien 10 secondes ================= */
+const C = 2 * Math.PI * 33;
+$("prog").style.strokeDasharray = C; $("prog").style.strokeDashoffset = C;
+let holding = false, holdStart = 0, holdRaf = 0;
+function holdFrame(){
+  if (!holding) return;
+  const ms = performance.now() - holdStart, p = Math.min(1, ms / HOLD_MS);
+  $("prog").style.strokeDashoffset = C * (1 - p);
+  const inhale = ms < 4000;
+  setHint(inhale ? t().inhale : t().exhale, true);
+  // Respiration : 4 s d'inspiration, 6 s d'expiration, en douceur
+  const b = inhale ? (1 - Math.cos(Math.PI * ms / 4000)) / 2 : (1 + Math.cos(Math.PI * Math.min(1, (ms - 4000) / 6000))) / 2;
+  $("core").style.transform = `scale(${1 + b * .45})`;
+  $("wave").style.scale = (1 + b * 3.4).toFixed(3);
+  $("wave2").style.scale = (1.08 + b * 3.9).toFixed(3);
+  if (p >= 1){ holding = false; complete(); return; }
+  holdRaf = requestAnimationFrame(holdFrame);
+}
+function startHold(e){
+  e.preventDefault();
+  if (back > 0){ toast(t().goToday); return; }
+  if (doneToday()){ toast(t().already); return; }
+  holding = true; holdStart = performance.now();
+  $("hold").classList.add("breathing");
+  try { $("hold").setPointerCapture(e.pointerId); } catch(_){}
+  holdRaf = requestAnimationFrame(holdFrame);
+}
+function endWave(){
+  $("hold").classList.remove("breathing");
+  ["wave","wave2"].forEach(id => { $(id).style.transition = "opacity .6s ease, scale .8s ease"; $(id).style.scale = 1; setTimeout(() => $(id).style.transition = "", 900); });
+}
+function cancelHold(){
+  if (!holding) return;
+  holding = false; cancelAnimationFrame(holdRaf);
+  endWave();
+  $("prog").style.strokeDashoffset = C; $("core").style.transform = "";
+  setHint(t().keep);
+}
+$("hold").addEventListener("pointerdown", startHold);
+["pointerup","pointercancel","lostpointercapture"].forEach(ev => $("hold").addEventListener(ev, cancelHold));
+$("hold").addEventListener("contextmenu", e => e.preventDefault());
+$("hold").addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && !holding && !e.repeat){ startHold(e); } });
+$("hold").addEventListener("keyup", e => { if (e.key === " " || e.key === "Enter") cancelHold(); });
+
+function complete(){
+  const before = totalDays();
+  if (!P.get("g")){ days.add(keyOf(logical(now()))); store.set("aube-days", [...days]); }
+  endWave();
+  $("core").style.transform = ""; $("prog").style.strokeDashoffset = 0;
+  setTimeout(() => { $("prog").style.strokeDashoffset = C; }, 1200);
+  growTo(before, before + 1);
+  burst(24);
+  const s = streak();
+  toast(s > 1 ? t().wellStreak(s) : t().wellStarted);
+  renderQuote(false);
+}
+
+/* ================= Anniversaire : arc-en-ciel le jour, aurore boréale la nuit ================= */
+function annivYears(){
+  if (P.get("anniv")) return parseInt(P.get("anniv"), 10) || 1;
+  const first = [...days].sort()[0]; if (!first) return 0;
+  const [y, m, d] = first.split("-").map(Number), L = logical(now());
+  return L.getMonth() === m - 1 && L.getDate() === d && L.getFullYear() > y ? L.getFullYear() - y : 0;
+}
+let annivN = annivYears();
+function annivToast(){
+  annivN = annivYears();
+  if (!annivN) return;
+  const k = keyOf(logical(now()));
+  if (!P.get("anniv") && store.get("aube-anniv-seen", "") === k) return;
+  store.set("aube-anniv-seen", k);
+  setTimeout(() => toast(t().anniv(annivN)), 1200);
+}
+
+/* ================= Soleil réel (Isère) ================= */
+const rad = Math.PI / 180;
+function sunPos(date){
+  const n = date.getTime() / 86400000 + 2440587.5 - 2451545.0;
+  const L = mod(280.460 + 0.9856474 * n, 360);
+  const g = mod(357.528 + 0.9856003 * n, 360) * rad;
+  const lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * rad;
+  const eps = (23.439 - 0.0000004 * n) * rad;
+  const ra = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam));
+  const dec = Math.asin(Math.sin(eps) * Math.sin(lam));
+  const gmst = mod(18.697374558 + 24.06570982441908 * n, 24);
+  const ha = (gmst * 15 + loc.lon) * rad - ra, lat = loc.lat * rad;
+  const el = Math.asin(Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(ha));
+  const az = Math.atan2(-Math.sin(ha), Math.tan(dec) * Math.cos(lat) - Math.sin(lat) * Math.cos(ha));
+  return { el: el / rad, az: mod(az / rad, 360) };
+}
+
+/* ================= Couleurs ================= */
+const hex = h => [1,3,5].map(i => parseInt(h.slice(i, i+2), 16));
+const toHex = c => "#" + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+const mix = (a, b, t) => toHex(hex(a).map((v, i) => v + (hex(b)[i] - v) * t));
+function ramp(stops, x){
+  if (x <= stops[0][0]) return stops[0][1];
+  for (let i = 1; i < stops.length; i++) if (x <= stops[i][0]){
+    const [x0, v0] = stops[i-1], [x1, v1] = stops[i], t = (x - x0) / (x1 - x0);
+    return Array.isArray(v0) ? v0.map((c, k) => mix(c, v1[k], t)) : mix(v0, v1, t);
+  }
+  return stops[stops.length - 1][1];
+}
+const SKY = [
+  [-18, ["#070B1E", "#0D1433", "#172046"]],
+  [-12, ["#0B1230", "#1D2352", "#3A2F66"]],
+  [-7,  ["#1B2150", "#4A3A7A", "#A0628E"]],
+  [-3,  ["#2E3A78", "#8E6A9E", "#F29A8E"]],
+  [0,   ["#4A5E9E", "#D58C9C", "#FFB07A"]],
+  [4,   ["#5E82C4", "#E8B0A0", "#FFD08A"]],
+  [10,  ["#4F8BD6", "#9CC3E8", "#F4E3B8"]],
+  [25,  ["#3A7FD4", "#79B4EA", "#CBE6F7"]],
+  [60,  ["#2F74CF", "#6AAAE6", "#C4E2F7"]]
+];
+/* Saison : roche des 4 plans (loin → près), forêt, prairie, neige */
+const SEASONS = [
+  { d: 15,  rock: ["#B7C6E0", "#93A5C6", "#71819C", "#5C6B7C"], forest: "#2F5B4E", meadow: ["#8FB08C", "#557A56"], snow: 1.0 },
+  { d: 105, rock: ["#AFC2DE", "#8CA2BE", "#7C8C9C", "#6F7C80"], forest: "#3F8A45", meadow: ["#A6D26A", "#5E9A3E"], snow: 0.6 },
+  { d: 196, rock: ["#A9BEDB", "#8C9EB4", "#86887C", "#7A7A68"], forest: "#2F7536", meadow: ["#8CC45A", "#4E8A34"], snow: 0.1 },
+  { d: 288, rock: ["#B0BFD6", "#979BAE", "#8E8478", "#80705E"], forest: "#6E7A34", meadow: ["#B6B85A", "#7A8A38"], snow: 0.3 }
+];
+function seasonAt(doy){
+  for (let i = 0; i < SEASONS.length; i++){
+    const a = SEASONS[i], b = SEASONS[(i + 1) % SEASONS.length];
+    const bd = b.d > a.d ? b.d : b.d + 365, x = doy >= a.d ? doy : doy + 365;
+    if (x >= a.d && x < bd){
+      const t = (x - a.d) / (bd - a.d), e = t * t * (3 - 2 * t);
+      return { rock: a.rock.map((c, k) => mix(c, b.rock[k], e)), forest: mix(a.forest, b.forest, e),
+               meadow: a.meadow.map((c, k) => mix(c, b.meadow[k], e)), snow: a.snow + (b.snow - a.snow) * e };
+    }
+  }
+  return SEASONS[0];
+}
+
+/* ================= Relief ================= */
+let seed = 11;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+function ridge(base, peaks, hMin, hMax, slope, hero){
+  const P = [];
+  for (let k = 0; k < peaks; k++){
+    const x = (k + .15 + rnd() * .7) / peaks * 1600;
+    const bias = .5 + .6 * Math.exp(-Math.pow((x - 800) / 330, 2)); // les plus hauts au centre
+    P.push({ x, h: (hMin + rnd() * (hMax - hMin)) * bias, s: slope * (.7 + rnd() * .6) });
+  }
+  if (hero) P.push({ x: hero.x, h: hero.h, s: slope * .95 });
+  const pts = [];
+  for (let x = 0; x <= 1600; x += 8){
+    let y = 0; P.forEach(p => { y = Math.max(y, p.h - Math.abs(x - p.x) * p.s); });
+    y += (rnd() - .5) * 6 + Math.sin(x / 37) * 3;
+    pts.push([x, base - y]);
+  }
+  return pts;
+}
+const LAYERS = [
+  { base: 270, peaks: 7, hMin: 110, hMax: 210, slope: .95, hero: { x: 830, h: 250 } },
+  { base: 320, peaks: 6, hMin: 80,  hMax: 160, slope: .8,  hero: { x: 700, h: 175 } },
+  { base: 380, peaks: 5, hMin: 45,  hMax: 100, slope: .55 },
+  { base: 420, peaks: 5, hMin: 18,  hMax: 50,  slope: .35 }
+];
+const SNOW_W = [1, .75, .35, .05];
+const ROCK_TOP = [.42, .34, .22, .05];   // part rocheuse avant la forêt
+const HAZE = [.65, .45, .2, .05];        // voile bleuté des plans lointains
+const layerEls = [];
+LAYERS.forEach((L, i) => {
+  const pts = ridge(L.base, L.peaks, L.hMin, L.hMax, L.slope, L.hero);
+  const d = "M0 600 L" + pts.map(p => p[0] + " " + p[1].toFixed(1)).join(" L") + " L1600 600 Z";
+  const grad = el("linearGradient", { id: "lg" + i, x1: 0, y1: 0, x2: 0, y2: 1 });
+  const stops = [0, ROCK_TOP[i], Math.min(.95, ROCK_TOP[i] + .3), 1].map(o => { const s = el("stop", { offset: o }); grad.append(s); return s; });
+  const clip = el("clipPath", { id: "sn" + i }); const cp = el("path"); clip.append(cp);
+  $("defs").append(grad, clip);
+  const body = el("path", { d, fill: `url(#lg${i})` });
+  const snow = el("path", { d, "clip-path": `url(#sn${i})` });
+  $("layers").append(body, snow);
+  const jag = []; for (let x = 0; x <= 1600; x += 20) jag.push([x, (rnd() - .5) * 26]);
+  layerEls.push({ stops, snow, cp, jag, top: Math.min(...pts.map(p => p[1])), base: L.base });
+});
+const snowClip = (L, line) => "M0 0 L1600 0 L" + L.jag.slice().reverse().map(([x, j]) => x + " " + (line + j).toFixed(1)).join(" L") + " Z";
+
+/* Prairie au premier plan, avec la butte de l’arbre */
+const meadowY = x => 452 - 26 * Math.exp(-Math.pow((x - 690) / 200, 2)) + Math.sin(x / 90) * 5 + Math.sin(x / 23) * 1.5;
+{
+  let d = "M0 600"; for (let x = 0; x <= 1600; x += 10) d += ` L${x} ${meadowY(x).toFixed(1)}`; d += " L1600 600 Z";
+  $("meadow").setAttribute("d", d);
+  const mg = el("linearGradient", { id: "mg", x1: 0, y1: 0, x2: 0, y2: 1 });
+  mg.append(el("stop", { offset: 0, id: "mg0" }), el("stop", { offset: .6, id: "mg1" }));
+  $("defs").append(mg); $("meadow").setAttribute("fill", "url(#mg)");
+  // brins d’herbe en 3 groupes qui ondulent
+  for (let gI = 0; gI < 3; gI++){
+    const g = el("g", { class: "blades b" + (gI + 1) }); let d2 = "";
+    for (let x = 420 + gI * 7; x < 1180; x += 21){
+      const y = meadowY(x) + 2, h = 8 + rnd() * 12, lean = (rnd() - .3) * 6;
+      d2 += `M${x} ${y} q${lean / 2} ${-h / 2} ${lean} ${-h} `;
+    }
+    g.append(el("path", { d: d2, fill: "none", "stroke-width": 2, "stroke-linecap": "round", class: "blade" }));
+    $("grass").append(g);
+  }
+}
+
+/* ================= Arbre ================= */
+const TREE_X = 700, TREE_Y = meadowY(690) + 4;
+$("tree").style.transformOrigin = `${TREE_X}px ${TREE_Y}px`;
+let tseed = 5;
+const trnd = () => (tseed = (tseed * 48271) % 2147483647) / 2147483647;
+function makeNode(depth){
+  const n = { a: 0, r: .74 + trnd() * .08, kids: [] };
+  if (depth < 7){
+    const k = depth < 2 ? 2 : (trnd() > .35 ? 2 : 3);
+    for (let i = 0; i < k; i++){
+      const c = makeNode(depth + 1);
+      c.a = (k === 2 ? (i === 0 ? -1 : 1) : (i - 1)) * (16 + trnd() * 18) + (trnd() - .5) * 8;
+      n.kids.push(c);
+    }
+  }
+  n.bl = trnd(); // variation fleurs
+  return n;
+}
+const TREE = makeNode(0);
+let tips = []; // points de fleurs (coord. scène) pour les pétales
+function drawTree(daysCount){
+  const g = $("tree"); g.innerHTML = ""; tips = [];
+  const wood = "#5A3E32", leaf = "#5E9A45", pink = ["#F9C5D3", "#F4A7BD", "#FFD9E3", "#EE93AE"];
+  if (daysCount < 3){
+    // Pousse puis petite fleur
+    const h = daysCount === 0 ? 16 : 24 + daysCount * 5;
+    g.append(el("path", { d: `M${TREE_X} ${TREE_Y} q-3 ${-h/2} 0 ${-h}`, stroke: "#4F8A3C", "stroke-width": 2.5, fill: "none", "stroke-linecap": "round" }));
+    g.append(el("ellipse", { cx: TREE_X - 6, cy: TREE_Y - h * .45, rx: 6, ry: 2.8, fill: leaf, transform: `rotate(-30 ${TREE_X - 6} ${TREE_Y - h * .45})` }));
+    g.append(el("ellipse", { cx: TREE_X + 6, cy: TREE_Y - h * .6, rx: 6, ry: 2.8, fill: leaf, transform: `rotate(30 ${TREE_X + 6} ${TREE_Y - h * .6})` }));
+    const cx = TREE_X, cy = TREE_Y - h;
+    if (daysCount === 0){
+      g.append(el("ellipse", { cx, cy: cy - 3, rx: 3.5, ry: 5, fill: "#F4A7BD" }));
+    } else {
+      const r = 4 + daysCount * 1.5;
+      for (let k = 0; k < 5; k++){
+        const a = k / 5 * Math.PI * 2 - Math.PI / 2;
+        g.append(el("ellipse", { cx: cx + Math.cos(a) * r, cy: cy + Math.sin(a) * r, rx: r * .75, ry: r * .55, fill: pink[k % 2], transform: `rotate(${a / rad} ${cx + Math.cos(a) * r} ${cy + Math.sin(a) * r})` }));
+      }
+      g.append(el("circle", { cx, cy, r: r * .45, fill: "#FFD66B" }));
+    }
+    return;
+  }
+  const gr = Math.min(1, (daysCount - 2) / 28);          // 0 → 1 en un mois environ
+  const size = 40 + 130 * Math.pow(gr, .8);
+  const maxDepth = Math.min(7, 2 + Math.floor(gr * 5.5));
+  const bloom = gr < .3 ? 0 : Math.min(1, (gr - .25) / .6);
+  let branches = "", flowers = [], leaves = [];
+  (function walk(n, x, y, ang, len, w, depth){
+    const x2 = x + Math.sin(ang * rad) * len, y2 = y - Math.cos(ang * rad) * len;
+    const bend = (n.bl - .5) * len * .25;
+    branches += `<path d="M${x.toFixed(1)} ${y.toFixed(1)} Q${((x + x2) / 2 + bend).toFixed(1)} ${((y + y2) / 2).toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke-width="${w.toFixed(2)}"/>`;
+    const last = depth >= maxDepth || !n.kids.length;
+    if (depth >= maxDepth - 1){
+      if (bloom > 0 && n.bl < .35 + bloom * .65) flowers.push([x2, y2, n.bl]);
+      else if (bloom < .9) leaves.push([x2, y2, ang]);
+    }
+    if (!last) n.kids.forEach(c => walk(c, x2, y2, ang + c.a, len * c.r, w * .68, depth + 1));
+  })(TREE, TREE_X, TREE_Y, 0, size * .34, 3 + gr * 10, 0);
+  const bg = el("g", { stroke: wood, fill: "none", "stroke-linecap": "round" }); bg.innerHTML = branches; g.append(bg);
+  leaves.forEach(([x, y, a]) => g.append(el("ellipse", { cx: x, cy: y, rx: 4 + gr * 3, ry: 2 + gr * 1.4, fill: leaf, transform: `rotate(${a + 40} ${x} ${y})` })));
+  flowers.forEach(([x, y, v]) => {
+    const r = 3.5 + gr * 5;
+    for (let k = 0; k < 3; k++){
+      g.append(el("circle", { cx: x + (k - 1) * r * .7, cy: y + (k === 1 ? -r * .5 : r * .2), r: r * (.75 + v * .4), fill: pink[(k + Math.floor(v * 4)) % 4], opacity: .95 }));
+    }
+    tips.push([x, y]);
+  });
+}
+let grow = null;
+function growTo(from, to){
+  if (REDUCED){ drawTree(to); return; }
+  grow = { from, to, t0: performance.now() };
+}
+
+/* ================= Nuages, oiseaux, pétales ================= */
+const backC = $("back"), frontC = $("front"), bx = backC.getContext("2d"), fx = frontC.getContext("2d");
+let W = 0, H = 0, DPR = 1;
+function resize(){
+  DPR = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+  [backC, frontC].forEach(c => { c.width = W * DPR; c.height = H * DPR; });
+  bx.setTransform(DPR, 0, 0, DPR, 0, 0); fx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+resize();
+const clouds = [];
+{
+  const dn = dayNumber(now()); let s = (dn * 9301 + 49297) % 233280;
+  const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  const count = 3 + Math.floor(r() * 4);
+  for (let i = 0; i < count; i++) clouds.push({ x: r() * 1.2 - .1, y: r(), s: .45 + r() * .5, v: .004 + r() * .006,
+    puffs: Array.from({ length: 5 }, (_, k) => [k * 18 - 36 + r() * 8, -r() * 14 - (k === 2 ? 10 : 0), 14 + r() * 12]) });
+}
+let birds = [], nextBirds = performance.now() + 6000;
+let petals = [], drops = [], nextFlash = performance.now() + 4000;
+let skyCol = { hor: "#FFB07A", el: 10 };
+function scenePoint(x, y){
+  const m = $("scene").getScreenCTM(); if (!m) return [0, 0];
+  return [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+}
+function burst(n){
+  const src = tips.length ? tips : [[TREE_X, TREE_Y - 30]];
+  for (let i = 0; i < n; i++){ const t = src[Math.floor(Math.random() * src.length)]; spawnPetal(t, true); }
+}
+function spawnPetal(t, strong){
+  const [x, y] = scenePoint(t[0], t[1]);
+  petals.push({ x, y, vx: (Math.random() - .3) * (strong ? 60 : 20), vy: strong ? -30 - Math.random() * 40 : 0,
+    r: 3 + Math.random() * 2.5, rot: Math.random() * 6, vr: (Math.random() - .5) * 4, ph: Math.random() * 6, life: 0,
+    c: ["#F9C5D3", "#F4A7BD", "#FFD9E3"][Math.floor(Math.random() * 3)] });
+}
+let last = performance.now();
+function frame(t){
+  const dt = Math.min(.05, (t - last) / 1000); last = t;
+  const wind = windPx(t);
+  if (grow){
+    const p = Math.min(1, (t - grow.t0) / 1600);
+    drawTree(p < 1 ? grow.from + (grow.to - grow.from) * (p * p * (3 - 2 * p)) : grow.to);
+    if (p >= 1) grow = null;
+  }
+  // Arrière-plan : nuages + oiseaux
+  bx.clearRect(0, 0, W, H);
+  const night = Math.max(0, Math.min(1, (2 - skyCol.el) / 12));
+  const cloudC = mix(mix("#FFFFFF", skyCol.hor, .35 * Math.max(0, 1 - Math.abs(skyCol.el - 1) / 10)), "#2A3158", night);
+  bx.fillStyle = cloudC; bx.globalAlpha = .7 - night * .35;
+  // Les nuages restent entre le texte et les sommets, jamais devant les mots
+  const wr = $("wrap").getBoundingClientRect(), mr = $("mountains").getBoundingClientRect();
+  const bandTop = wr.bottom + 24, bandBot = Math.max(bandTop + 10, mr.top + mr.height * .22);
+  // Aurore boréale (jour d'anniversaire, la nuit)
+  const aur = annivN ? Math.max(0, Math.min(1, (-skyCol.el - 6) / 6)) : 0;
+  if (aur > 0){
+    const base = mr.top + mr.height * .14, maxH = Math.max(80, base - wr.top + 20);
+    const tt = REDUCED ? 0 : t;
+    bx.save(); bx.globalCompositeOperation = "lighter";
+    for (let x = -10; x < W + 10; x += 3){
+      const y0 = base - 30 + Math.sin(x / 140 + tt / 3200) * 26 + Math.sin(x / 53 + tt / 1900) * 10;
+      const h = maxH * (.45 + .3 * Math.sin(x / 70 + tt / 2300) + .15 * Math.sin(x / 23 + tt / 900));
+      const a = aur * (.5 + .22 * Math.sin(x / 90 - tt / 1500)) * (.72 + .28 * Math.sin(x / 7 + tt / 450));
+      const g = bx.createLinearGradient(0, y0, 0, y0 - h);
+      g.addColorStop(0, `rgba(90,255,170,${a})`);
+      g.addColorStop(.45, `rgba(60,220,160,${a * .6})`);
+      g.addColorStop(.8, `rgba(150,90,255,${a * .35})`);
+      g.addColorStop(1, "rgba(150,90,255,0)");
+      bx.fillStyle = g; bx.fillRect(x, y0 - h, 3.2, h);
+    }
+    bx.restore();
+  }
+  clouds.forEach(c => {
+    if (!REDUCED) c.x += c.v * dt * (wind / 22);
+    if (c.x > 1.25) c.x = -.25;
+    const cx = c.x * W, cy = bandTop + 50 * c.s + c.y * Math.max(0, bandBot - bandTop - 50 * c.s);
+    bx.globalAlpha = (.7 - night * .35) * (c.a || 1);
+    bx.beginPath();
+    c.puffs.forEach(([dx, dy, r]) => { bx.moveTo(cx + dx * c.s + r * c.s, cy + dy * c.s); bx.arc(cx + dx * c.s, cy + dy * c.s, r * c.s, 0, Math.PI * 2); });
+    bx.rect(cx - 50 * c.s, cy - 2 * c.s, 100 * c.s, 14 * c.s);
+    bx.fill();
+  });
+  bx.globalAlpha = 1;
+  if (!REDUCED && skyCol.el > -3 && t > nextBirds && !["rain","snow","storm"].includes(wxKind())){
+    const dir = Math.random() > .5 ? 1 : -1, n = 2 + Math.floor(Math.random() * 4), y0 = H * (.12 + Math.random() * .25);
+    for (let i = 0; i < n; i++) birds.push({ x: dir > 0 ? -30 - i * 26 : W + 30 + i * 26, y: y0 + (i % 2) * 14 + i * 4, v: dir * (45 + Math.random() * 15), ph: Math.random() * 6, s: .8 + Math.random() * .4 });
+    nextBirds = t + 25000 + Math.random() * 45000;
+  }
+  bx.strokeStyle = night > .5 ? "rgba(220,225,245,.6)" : "rgba(35,40,60,.75)"; bx.lineWidth = 1.6; bx.lineCap = "round";
+  birds = birds.filter(b => {
+    b.x += b.v * dt; b.y += Math.sin(t / 700 + b.ph) * .15;
+    const f = Math.sin(t / 110 + b.ph) * 5 * b.s, w = 8 * b.s;
+    bx.beginPath(); bx.moveTo(b.x - w, b.y - f); bx.quadraticCurveTo(b.x - w / 2, b.y - 2, b.x, b.y);
+    bx.quadraticCurveTo(b.x + w / 2, b.y - 2, b.x + w, b.y - f); bx.stroke();
+    return b.x > -80 && b.x < W + 80;
+  });
+  // Premier plan : pluie / neige, puis pétales
+  fx.clearRect(0, 0, W, H);
+  const kind = wxKind();
+  if (!REDUCED && (kind === "rain" || kind === "storm" || kind === "snow")){
+    const snow = kind === "snow", inten = wxIntensity();
+    const want = Math.round((snow ? 90 : 160) * inten * (W / 400));
+    while (drops.length < want) drops.push({ x: Math.random() * W * 1.3 - W * .15, y: Math.random() * H, v: snow ? 30 + Math.random() * 40 : 520 + Math.random() * 280, r: snow ? 1.2 + Math.random() * 2.2 : 0, ph: Math.random() * 6 });
+    if (drops.length > want) drops.length = want;
+    fx.strokeStyle = night > .5 ? "rgba(180,190,220,.35)" : "rgba(230,236,245,.55)"; fx.lineWidth = 1.1;
+    fx.fillStyle = "rgba(255,255,255,.9)";
+    fx.beginPath();
+    drops.forEach(d => {
+      const vx = snow ? wind * .8 + Math.sin(t / 900 + d.ph) * 18 : wind * 2.2;
+      d.x += vx * dt; d.y += d.v * dt;
+      if (d.y > H){ d.y = -10; d.x = Math.random() * W * 1.3 - W * .15; }
+      if (snow){ fx.moveTo(d.x + d.r, d.y); fx.arc(d.x, d.y, d.r, 0, Math.PI * 2); }
+      else { fx.moveTo(d.x, d.y); fx.lineTo(d.x - vx * .025, d.y - d.v * .025); }
+    });
+    snow ? fx.fill() : fx.stroke();
+  } else drops.length = 0;
+  if (!REDUCED && kind === "storm" && t > nextFlash){
+    const f = $("flash"); f.style.transition = "none"; f.style.opacity = .55;
+    requestAnimationFrame(() => { f.style.transition = "opacity .6s ease-out"; f.style.opacity = 0; });
+    nextFlash = t + 6000 + Math.random() * 12000;
+  }
+  if (!REDUCED){
+    const gr = Math.min(1, (totalDays() - 2) / 28);
+    if (tips.length && gr > .55 && Math.random() < dt * (gr - .45) * 2.2) spawnPetal(tips[Math.floor(Math.random() * tips.length)]);
+    const dim = 1 - night * .45;
+    petals = petals.filter(p => {
+      p.life += dt; p.vy += 18 * dt; if (p.vy > 34) p.vy = 34;
+      p.vx += (wind - p.vx) * dt * .8;
+      p.x += (p.vx + Math.sin(p.life * 2.2 + p.ph) * 26) * dt;
+      p.y += (p.vy + Math.cos(p.life * 1.7 + p.ph) * 10) * dt;
+      p.rot += p.vr * dt;
+      fx.save(); fx.translate(p.x, p.y); fx.rotate(p.rot); fx.scale(1, Math.abs(Math.sin(p.life * 3 + p.ph)) * .6 + .4);
+      fx.globalAlpha = Math.min(1, p.life * 2) * dim; fx.fillStyle = p.c;
+      fx.beginPath(); fx.ellipse(0, 0, p.r, p.r * .65, 0, 0, Math.PI * 2); fx.fill(); fx.restore();
+      return p.y < H + 20 && p.x < W + 30 && p.life < 14;
+    });
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ================= Météo (Open-Meteo, sans clé) ================= */
+let WX = store.get("aube-wx", null);
+if (WX && Date.now() - WX.t > 3 * 3600000) WX = null;
+const PRESETS = {
+  clear:  { cloud: 5,   code: 0,  precip: 0, wind: 8,  temp: 14 },
+  cloudy: { cloud: 90,  code: 3,  precip: 0, wind: 14, temp: 11 },
+  rain:   { cloud: 100, code: 63, precip: 2, wind: 22, temp: 9 },
+  snow:   { cloud: 100, code: 73, precip: 1, wind: 10, temp: -2 },
+  fog:    { cloud: 100, code: 45, precip: 0, wind: 3,  temp: 5 },
+  storm:  { cloud: 100, code: 95, precip: 6, wind: 45, temp: 17 }
+};
+if (P.get("w") && PRESETS[P.get("w")]) WX = { ...PRESETS[P.get("w")], t: Date.now() };
+function wxKind(){
+  if (!WX) return "none";
+  const c = WX.code;
+  if (c >= 95) return "storm";
+  if ((c >= 71 && c <= 77) || c === 85 || c === 86) return "snow";
+  if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return "rain";
+  if (c === 45 || c === 48) return "fog";
+  return "clear";
+}
+function wxIntensity(){
+  if (!WX) return 0;
+  const c = WX.code, last = c % 10;
+  return Math.max(.3, Math.min(1, (WX.precip || 0) / 4 + (last >= 5 ? .6 : last >= 3 ? .4 : .25)));
+}
+async function fetchWeather(){
+  if (P.get("w")){ applyWeather(); return; }
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,cloud_cover,precipitation,weather_code,wind_speed_10m&wind_speed_unit=kmh&timezone=auto`;
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    const c = (await r.json()).current;
+    WX = { cloud: c.cloud_cover, code: c.weather_code, precip: c.precipitation, wind: c.wind_speed_10m, temp: c.temperature_2m, t: Date.now() };
+    store.set("aube-wx", WX);
+  } catch(e){ /* hors ligne ou bloqué : on garde le dernier relevé ou le décor par défaut */ }
+  applyWeather();
+}
+function renderTemp(){ $("temp").textContent = WX && typeof WX.temp === "number" ? Math.round(WX.temp) + "°" : ""; }
+function applyWeather(){
+  const over = WX ? WX.cloud / 100 : 0;
+  const kind = wxKind();
+  // Nuages : nombre et place selon la couverture réelle
+  const target = WX ? Math.round(1 + over * 9) : clouds.length;
+  if (WX){
+    clouds.length = 0;
+    let sd = (dayNumber(now()) * 9301 + 49297 + target) % 233280;
+    const r = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+    for (let i = 0; i < target; i++){
+      clouds.push({ x: r() * 1.3 - .15, y: r(), s: .45 + r() * .55 + over * .3,
+        v: .004 + r() * .006, a: 1,
+        puffs: Array.from({ length: 5 }, (_, k) => [k * 18 - 36 + r() * 8, -r() * 14 - (k === 2 ? 10 : 0), 14 + r() * 12]) });
+    }
+  }
+  // Vent réel → balancement
+  const wind = WX ? WX.wind : 15;
+  const sw = Math.max(.4, Math.min(3.2, wind / 14));
+  document.documentElement.style.setProperty("--sw", sw.toFixed(2));
+  document.documentElement.style.setProperty("--swd", Math.max(2.2, 8 - wind / 8).toFixed(1) + "s");
+  $("fog").style.opacity = kind === "fog" ? 1 : kind === "rain" || kind === "snow" ? .25 : 0;
+  renderTemp();
+  paint();
+}
+function windPx(tm){ const base = WX ? 6 + WX.wind * 1.3 : 22; return base + Math.sin(tm / 5000) * base * .5 + Math.sin(tm / 1300) * base * .2; }
+
+/* ================= Peinture du paysage ================= */
+for (let i = 0; i < 90; i++){
+  const s = document.createElement("i");
+  s.style.left = (rnd() * 100) + "%"; s.style.top = (rnd() * 55) + "%";
+  s.style.opacity = (.35 + rnd() * .65).toFixed(2);
+  if (rnd() > .85) s.style.width = s.style.height = "3px";
+  $("stars").append(s);
+}
+function paint(){
+  const d = now(), { el: e, az } = sunPos(d);
+  const doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+  let [top, mid, hor] = ramp(SKY, e);
+  const over = WX ? WX.cloud / 100 : 0, kind = wxKind();
+  if (over > 0){
+    const grey = c => { const [r, g, b] = hex(c); const l = (r * .3 + g * .59 + b * .11); return toHex([l, l, l * 1.04]); };
+    const k = over * (kind === "storm" ? .75 : kind === "rain" || kind === "snow" ? .65 : .5);
+    top = mix(top, grey(top), k); mid = mix(mid, grey(mid), k); hor = mix(hor, grey(hor), k);
+    if (kind === "storm" || kind === "rain"){ top = mix(top, "#2A2F3A", .25); mid = mix(mid, "#3A404C", .2); }
+  }
+  skyCol = { hor, el: e };
+  $("sky").style.background = `linear-gradient(to bottom, ${top} 0%, ${mid} 48%, ${hor} 82%)`;
+  $("stars").style.opacity = Math.max(0, Math.min(1, (-e - 5) / 8)) * (1 - over * .9);
+
+  const mt = $("mountains").getBoundingClientRect();
+  const horizon = mt.top + mt.height * .36, high = innerHeight * .38;
+  const x = 8 + Math.max(0, Math.min(1, (az - 70) / 220)) * 84;
+  const y = horizon - (Math.min(e, 70) / 70) * (horizon - high);
+  const sunC = ramp([[-2, "#FF8A4C"], [6, "#FFB870"], [20, "#FFF1CC"], [40, "#FFFBEE"]], e);
+  const sEl = $("sun");
+  sEl.style.left = x + "vw"; sEl.style.top = y + "px"; sEl.style.background = sunC;
+  sEl.style.boxShadow = `0 0 40px 18px ${sunC}66, 0 0 120px 60px ${sunC}33`;
+  sEl.style.opacity = e > -4 ? (1 - over * .85).toFixed(2) : 0;
+
+  // Arc-en-ciel (jour d'anniversaire, en journée)
+  annivN = annivYears();
+  const rb = $("rainbow");
+  rb.style.top = (mt.top + mt.height * .42 - rb.getBoundingClientRect().height) + "px";
+  rb.style.opacity = annivN ? (Math.max(0, Math.min(1, (e - 1) / 6)) * (1 - over * .3) * .8).toFixed(2) : 0;
+
+  const S = seasonAt(doy);
+  const dark = Math.max(0, Math.min(.82, (6 - e) / 18 * .82));
+  const warm = e > -5 && e < 9 ? .18 * (1 - Math.abs(e - 2) / 7) : 0;
+  const light = c => mix(warm > 0 ? mix(c, "#E89A8A", warm) : c, "#0A0F2C", dark);
+  const haze = "#A9BCDA";
+  layerEls.forEach((L, i) => {
+    const rock = S.rock[i], forest = mix(S.forest, haze, HAZE[i]);
+    const cols = [rock, rock, forest, mix(forest, "#000000", .12)];
+    L.stops.forEach((s, k) => s.setAttribute("stop-color", light(cols[k])));
+    L.snow.setAttribute("fill", mix(mix("#F4F7FB", "#FFD9C4", warm * 1.4), "#1E2750", dark * .9));
+    // Neige cohérente avec l'altitude : les plans lointains (plus hauts) en gardent le plus,
+    // les contreforts n'en ont qu'au cœur de l'hiver
+    const amt = [Math.min(1, S.snow * 1.5), Math.min(1, S.snow * 1.2), Math.max(0, S.snow - .6), Math.max(0, S.snow - .85) * .8][i];
+    L.cp.setAttribute("d", snowClip(L, amt <= .02 ? -40 : L.top + amt * (L.base - L.top) * .5));
+  });
+  $("mg0").setAttribute("stop-color", light(S.meadow[0]));
+  $("mg1").setAttribute("stop-color", light(S.meadow[1]));
+  document.querySelectorAll(".blade").forEach(b => b.setAttribute("stroke", light(mix(S.meadow[1], "#2E5A24", .3))));
+  $("tree").style.filter = dark > .2 ? `brightness(${(1 - dark * .7).toFixed(2)})` : "";
+}
+
+/* ================= Démarrage ================= */
+applyLang();
+drawTree(totalDays());
+renderQuote(false);
+if (WX) applyWeather(); else paint();
+fetchWeather();
+annivToast();
+requestAnimationFrame(frame);
+setInterval(() => { paint(); if (back === 0 && !holding) renderQuote(false); }, 60000);
+setInterval(fetchWeather, 15 * 60000);
+if ("serviceWorker" in navigator && location.protocol === "https:" && !/claude\.ai|claudeusercontent/.test(location.hostname)){
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+addEventListener("resize", () => { resize(); paint(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden){ paint(); renderQuote(false); if (!WX || Date.now() - WX.t > 10 * 60000) fetchWeather(); } });
+</script>
+</body>
+</html>

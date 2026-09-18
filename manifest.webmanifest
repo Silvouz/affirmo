@@ -1,0 +1,29 @@
+{
+ "name": "Affirmo",
+ "short_name": "Affirmo",
+ "description": "Une affirmation par jour pour bien commencer la journée.",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#1B2150",
+ "theme_color": "#1B2150",
+ "lang": "fr",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
