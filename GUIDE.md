@@ -2,7 +2,7 @@
 
 Ce dossier contient toutes les étapes d'aide à l'initialisation.
 
-## 1. Enregistrer le lien de la WebApp sur votre smartphone
+## 1. Enregistrer le lien de la WebApp sur ton smartphone
 
 Ouvre https://silvouz.github.io/affirmo/ dans Safari, puis touche le bouton Partager, le carré avec une flèche vers le haut (en bas de l'écran, ou dans le menu « … » selon ta version d'iOS). Fais défiler et choisis « Sur l'écran d'accueil ». Si l'option « Ouvrir en tant qu'app web » apparaît, laisse-la activée, garde le nom Affirmo et touche « Ajouter ». L'icône du lever de soleil arrive alors sur ton écran d'accueil, et Affirmo s'ouvre en plein écran, sans barre de navigateur.
 
@@ -69,7 +69,3 @@ Puis l'automatisation :
 3. Action : « Exécuter le raccourci », « Affirmo d'abord ».
 
 Tu peux toujours revenir à l'app ensuite : le but n'est pas de t'enfermer, c'est de glisser dix secondes de respiration entre le réflexe et le scroll. Change le `10` si ton matin s'arrête à une autre heure.
-
-## 7. Tester les ambiances
-
-Ajoute ces paramètres à la fin de l'adresse pour prévisualiser : `?w=rain`, `?w=snow`, `?w=fog`, `?w=storm`, `?w=cloudy` ou `?w=clear` pour la météo, `?h=7.5` pour l'heure, `?d=2027-01-15` pour la date, `?g=30` pour l'arbre adulte, `?lang=en` pour l'anglais, `?anniv=1` pour voir le jour anniversaire (arc-en-ciel en journée, aurore boréale la nuit). Ils se combinent avec `&`, par exemple `?w=snow&h=9&d=2027-01-15`. Rien n'est enregistré quand tu utilises `g`.
