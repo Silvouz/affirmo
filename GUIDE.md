@@ -1,16 +1,10 @@
 # Affirmo : mise en ligne, widget et rituels automatiques
 
-Ce dossier contient tout le site. Compte 20 à 30 minutes pour l'ensemble, dont 10 pour la mise en ligne.
+Ce dossier contient toutes les étapes d'aide à l'initialisation.
 
-## 1. Mettre Affirmo en ligne sur GitHub Pages (gratuit)
+## 1. Enregistrer le lien de la WebApp sur votre smartphone
 
-1. Crée un compte sur github.com si tu n'en as pas.
-2. En haut à droite, « + » puis « New repository ». Nom : `affirmo`. Laisse-le en **Public**, puis « Create repository ».
-3. Sur la page du dépôt, clique sur « uploading an existing file », glisse tous les fichiers de ce dossier (index.html, affirmations.json, manifest.webmanifest, sw.js, les trois images .png, widget-affirmo.js et ce guide), puis « Commit changes ».
-4. Va dans « Settings », puis « Pages » dans la colonne de gauche. Dans « Build and deployment », choisis « Deploy from a branch », branche `main`, dossier `/ (root)`, puis « Save ».
-5. Attends une à deux minutes et recharge la page : ton adresse s'affiche, du type `https://ton-pseudo.github.io/affirmo/`. Note-la, elle sert partout ensuite.
-
-Pour mettre à jour plus tard, il suffit de réimporter le fichier modifié de la même façon.
+Ouvre https://silvouz.github.io/affirmo/ dans Safari, puis touche le bouton Partager, le carré avec une flèche vers le haut (en bas de l'écran, ou dans le menu « … » selon ta version d'iOS). Fais défiler et choisis « Sur l'écran d'accueil ». Si l'option « Ouvrir en tant qu'app web » apparaît, laisse-la activée, garde le nom Affirmo et touche « Ajouter ». L'icône du lever de soleil arrive alors sur ton écran d'accueil, et Affirmo s'ouvre en plein écran, sans barre de navigateur.
 
 ## 2. Un choix important : comment tu ouvres Affirmo
 
